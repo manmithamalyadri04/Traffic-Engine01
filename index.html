@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniFlow: Dynamic Elastic Micro-Phasing Traffic Controller</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <header class="top-nav">
+            <div class="brand">
+                <div class="brand-icon">
+                    <span class="pulse-dot"></span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                </div>
+                <div>
+                    <h1>OmniFlow <span class="tag">Edge-AI</span></h1>
+                    <p class="subtitle">Packet-Switched Elastic Micro-Phasing Traffic Controller</p>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <div class="status-badge" id="connection-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+                <div class="mode-pill" id="active-mode-pill">
+                    <span class="mode-icon">⚡</span>
+                    <span id="active-mode-text">Elastic AI Mode</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Center Canvas Area -->
+            <div class="canvas-panel">
+                <div class="canvas-header">
+                    <div class="view-tag">
+                        <span class="radar-ping"></span>
+                        INTERSECTION 104 • UPSTREAM RADAR &amp; VISION HORIZON ACTIVE
+                    </div>
+                    <div class="canvas-legends">
+                        <span class="legend"><span class="legend-color legend-horizon"></span> 90m Horizon Detection</span>
+                        <span class="legend"><span class="legend-color legend-emergency"></span> Emergency Siren</span>
+                    </div>
+                </div>
+
+                <div class="canvas-wrapper">
+                    <canvas id="traffic-canvas" width="750" height="750"></canvas>
+                    <div id="horizon-banner" class="horizon-toast">
+                        <span class="toast-icon">⚡</span>
+                        <span id="toast-message">Gap-Out Activated: Empty Green Phase Early-Terminated</span>
+                    </div>
+                </div>
+
+                <!-- Simulation Speed & Spawn Strip -->
+                <div class="quick-bar">
+                    <div class="quick-title">Quick Approach Influx:</div>
+                    <button class="btn btn-secondary" onclick="spawnCar('N')">↑ North (+1)</button>
+                    <button class="btn btn-secondary" onclick="spawnCar('S')">↓ South (+1)</button>
+                    <button class="btn btn-secondary" onclick="spawnCar('E')">← East (+1)</button>
+                    <button class="btn btn-secondary" onclick="spawnCar('W')">→ West (+1)</button>
+                    <button class="btn btn-emergency" onclick="spawnEmergency()">
+                        <span class="siren-blink">🚨</span> Dispatch Ambulance
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Telemetry & Controls Panel -->
+            <aside class="sidebar">
+                <!-- Highlight Problem-Solver Banner -->
+                <div class="metric-card hero-metric">
+                    <div class="metric-header">
+                        <span class="metric-title">EMPTY-RED IDLE TIME WASTED</span>
+                        <span class="tooltip-icon" title="Time vehicles sat at red lights while crossroad was 100% empty!">ℹ️</span>
+                    </div>
+                    <div class="metric-value-row">
+                        <span class="metric-number text-danger" id="metric-empty-red">0.0</span>
+                        <span class="metric-unit">seconds</span>
+                    </div>
+                    <div class="metric-description" id="metric-empty-desc">
+                        ✨ <strong>Zero waste:</strong> Elastic AI terminates empty greens immediately.
+                    </div>
+                </div>
+
+                <!-- Live Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">Avg Wait Delay</div>
+                        <div class="metric-value-row">
+                            <span class="metric-number" id="metric-avg-wait">0.0</span>
+                            <span class="metric-unit">s/car</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Throughput</div>
+                        <div class="metric-value-row">
+                            <span class="metric-number" id="metric-throughput">0.0</span>
+                            <span class="metric-unit">cars/min</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">CO₂ Emissions Saved</div>
+                        <div class="metric-value-row">
+                            <span class="metric-number text-success" id="metric-co2">0.00</span>
+                            <span class="metric-unit">kg</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Zero-Wait Gap-Outs</div>
+                        <div class="metric-value-row">
+                            <span class="metric-number text-cyan" id="metric-gapouts">0</span>
+                            <span class="metric-unit">times</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signal Phase Telemetry -->
+                <div class="panel-section">
+                    <h3 class="section-title">Signal State Telemetry</h3>
+                    <div class="signal-telemetry-box">
+                        <div class="signal-row">
+                            <div class="signal-group">
+                                <span class="axis-label">North-South</span>
+                                <div class="signal-lamps" id="lamps-ns">
+                                    <span class="lamp lamp-red"></span>
+                                    <span class="lamp lamp-yellow"></span>
+                                    <span class="lamp lamp-green"></span>
+                                </div>
+                            </div>
+                            <div class="phase-timer-box">
+                                <div class="timer-label">Phase Timer</div>
+                                <div class="timer-value" id="phase-timer-display">0.0s</div>
+                            </div>
+                            <div class="signal-group">
+                                <span class="axis-label">East-West</span>
+                                <div class="signal-lamps" id="lamps-ew">
+                                    <span class="lamp lamp-red"></span>
+                                    <span class="lamp lamp-yellow"></span>
+                                    <span class="lamp lamp-green"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="phase-progress"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controller Settings & Mode Selector -->
+                <div class="panel-section">
+                    <h3 class="section-title">Algorithm Switcher</h3>
+                    <div class="mode-switch-container">
+                        <button class="mode-btn active" id="btn-mode-ai" onclick="setControllerMode('ELASTIC_AI')">
+                            <div class="mode-btn-title">⚡ Elastic Micro-Phasing</div>
+                            <div class="mode-btn-desc">Switches in 2s if lane is empty; Horizon-Aware</div>
+                        </button>
+                        <button class="mode-btn" id="btn-mode-fixed" onclick="setControllerMode('FIXED_TIME')">
+                            <div class="mode-btn-title">⏳ Fixed-Time (Traditional)</div>
+                            <div class="mode-btn-desc">Fixed 30s timers regardless of empty roads</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Traffic Flow Scenario Selector -->
+                <div class="panel-section">
+                    <h3 class="section-title">Traffic Influx Profile</h3>
+                    <div class="density-selector">
+                        <button class="density-btn active" id="btn-den-offpeak" onclick="setTrafficDensity('OFF_PEAK')">
+                            🌙 Off-Peak (Night)
+                        </button>
+                        <button class="density-btn" id="btn-den-medium" onclick="setTrafficDensity('MEDIUM')">
+                            🏙️ Normal Flow
+                        </button>
+                        <button class="density-btn" id="btn-den-rush" onclick="setTrafficDensity('RUSH_HOUR')">
+                            🚗 Rush Hour
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reset Benchmarks -->
+                <div class="panel-section footer-actions">
+                    <button class="btn btn-outline" onclick="resetBenchmarks()">
+                        🔄 Reset Benchmark Metrics
+                    </button>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
